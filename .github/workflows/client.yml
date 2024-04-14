@@ -32,6 +32,11 @@ jobs:
         with:
           node-version: ${{ matrix.node-version }}
 
+      - name: Install JQ and get version from packages.json into env variable
+        run: |
+          sudo apt-get install jq
+          echo "CLIENT_VERSION=$(jq -r '.version' packages/client/package.json)" >> $GITHUB_ENV
+
       - name: Install, build, and test
         env:
           VITE_API_URL: ${{ secrets.SERVER_URL }}
@@ -46,11 +51,6 @@ jobs:
         with:
           name: client-${{ env.CLIENT_VERSION }}-${{ github.sha }}
           path: packages/client/dist
-
-      - name: Install JQ and get version from packages.json into env variable
-        run: |
-          sudo apt-get install jq
-          echo "CLIENT_VERSION=$(jq -r '.version' packages/client/package.json)" >> $GITHUB_ENV
 
       - name: 'Login via Azure CLI'
         uses: azure/login@v1
