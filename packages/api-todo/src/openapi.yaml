@@ -1,0 +1,76 @@
+openapi: 3.0.0
+info:
+  title: Todo API
+  version: 1.0.0
+  /todo/{id}:
+    get:
+      summary: Get a todo by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+    put:
+      summary: Update a todo by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+    delete:
+      summary: Delete a todo by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+  /todos/{id}:
+    get:
+      summary: Get a todo by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+    put:
+      summary: Update a todo by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+    delete:
+      summary: Delete a todo by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+components:
+  schemas:
+    Todo:
+      type: object
+      properties:
+        id:
+          type: string
+        title:
+          type: string
+        description:
+          type: string
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+          nullable: true
+        updatedAt:
+          type: string
+          format: date-time
+          nullable: true
+      required:
+        - title
