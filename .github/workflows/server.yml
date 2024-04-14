@@ -47,7 +47,7 @@ jobs:
       - name: Package server and save as GitHub artifact
         uses: actions/upload-artifact@v2
         with:
-          name: server-${{ env.CLIENT_VERSION }}-${{ github.sha }}
+          name: server-${{ env.CLIENT_VERSION }}-${{ github.run_number }}-${{ github.sha }}
           path: packages/server
 
       - name: 'Login via Azure CLI'
@@ -63,5 +63,5 @@ jobs:
           password: ${{ secrets.ACR_PASSWORD }}
       - run: |
             cd packages/server
-            docker build . -t ${{ secrets.REGISTRY_LOGIN_SERVER }}/server:${{ env.CLIENT_VERSION }}-${{ github.sha }}
-            docker push ${{ secrets.REGISTRY_LOGIN_SERVER }}/server:${{ env.CLIENT_VERSION }}-${{ github.sha }}
+            docker build . -t ${{ secrets.REGISTRY_LOGIN_SERVER }}/server:${{ env.CLIENT_VERSION }}-${{ github.run_number }}-${{ github.sha }}
+            docker push ${{ secrets.REGISTRY_LOGIN_SERVER }}/server:${{ env.CLIENT_VERSION }}-${{ github.run_number }}-${{ github.sha }}
