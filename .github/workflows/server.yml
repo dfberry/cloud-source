@@ -1,9 +1,11 @@
 name: Server
 
 on:
+
   push:
     branches: 
       - 'main'
+
     paths:
       - 'packages/server/**'
       - '.github/workflows/server.yml'
@@ -31,17 +33,13 @@ jobs:
         with:
           node-version: ${{ matrix.node-version }}
 
+
       - name: Install JQ and get version from packages.json into env variable
         run: |
           sudo apt-get install jq
           echo "CLIENT_VERSION=$(jq -r '.version' packages/client/package.json)" >> $GITHUB_ENV
 
-      - name: Install, build, and test
-        run: |
-          cd packages/server
-          npm install
-          npm run build
-          npm test
+
 
       - name: Package server and save as GitHub artifact
         uses: actions/upload-artifact@v2

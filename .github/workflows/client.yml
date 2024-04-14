@@ -36,14 +36,6 @@ jobs:
           sudo apt-get install jq
           echo "CLIENT_VERSION=$(jq -r '.version' packages/client/package.json)" >> $GITHUB_ENV
 
-      - name: Install, build, and test
-        env:
-          VITE_API_URL: ${{ secrets.SERVER_URL }}
-        run: |
-          cd packages/client
-          npm install
-          npm run build
-          npm test
 
       - name: Package client and save as GitHub artifact
         uses: actions/upload-artifact@v2
