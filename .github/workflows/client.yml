@@ -1,0 +1,68 @@
+# Client - build, test, containerize to azure container registry
+name: Client
+
+on:
+  workflow_dispatch:
+  push:
+    branches: 
+      - 'main'
+    paths:
+      - 'packages/client/**'
+      - '.github/workflows/client.yml'
+  pull_request:
+    branches: 
+      - 'main'
+    paths:
+      - 'packages/client/**'
+      - '.github/workflows/client.yml'
+
+env:
+  VITE_API_URL: ${{ secrets.SERVER_URL }}
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        node-version: [18.x]
+
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Client-Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v2
+        with:
+          node-version: ${{ matrix.node-version }}
+
+      - name: Print env vars
+        run: |
+          echo printenv
+
+      - name: Client-Build and run tests
+        run: |
+          npm ci --workspace=client
+          npm run build --workspace=client
+          npm run test --workspace=client
+
+      - name: Client-Login to Azure Container Registry
+        uses: azure/docker-login@v1
+        with:
+          login-server: ${{ secrets.ACR_REGISTRY }}
+          username: ${{ secrets.ACR_USERNAME }}
+          password: ${{ secrets.ACR_PASSWORD }}
+
+      - name: Install jq
+        run: |
+          sudo apt-get install jq
+
+      - name: Extract version
+        id: pkg
+        run: |
+          echo "::set-output name=version::$(jq -r .version ./packages/client/package.json)"
+
+      - name: Client-Build and push Docker image
+        run: |
+          docker build -t ${{ secrets.ACR_REGISTRY }}/client:${{ steps.pkg.outputs.version }} ./packages/client
+          docker push ${{ secrets.ACR_REGISTRY }}/client:${{ steps.pkg.outputs.version }}

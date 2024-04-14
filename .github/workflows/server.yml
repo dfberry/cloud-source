@@ -1,0 +1,65 @@
+# Server - build, test, containerize to azure container registry
+name: Server
+
+on:
+  workflow_dispatch:
+  push:
+    branches: 
+      - 'main'
+    paths:
+      - 'packages/server/**'
+      - '.github/workflows/server.yml'
+  pull_request:
+    branches: 
+      - 'main'
+    paths:
+      - 'packages/server/**'
+      - '.github/workflows/server.yml'
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        node-version: [18.x]
+
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Server-Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v2
+        with:
+          node-version: ${{ matrix.node-version }}
+
+      - name: Print env vars
+        run: |
+          echo printenv
+
+      - name: Server-Build and run tests
+        run: |
+          npm ci --workspace=server
+          npm run build --workspace=server
+          npm run test --workspace=server
+
+      - name: Server-Login to Azure Container Registry
+        uses: azure/docker-login@v1
+        with:
+          login-server: ${{ secrets.ACR_REGISTRY }}
+          username: ${{ secrets.ACR_USERNAME }}
+          password: ${{ secrets.ACR_PASSWORD }}
+
+      - name: Install jq
+        run: |
+          sudo apt-get install jq
+
+      - name: Extract version
+        id: pkg
+        run: |
+          echo "::set-output name=version::$(jq -r .version ./packages/server/package.json)"
+
+      - name: Server-Build and push Docker image
+        run: |
+          docker build -t ${{ secrets.ACR_REGISTRY }}/server:${{ steps.pkg.outputs.version }} ./packages/server
+          docker push ${{ secrets.ACR_REGISTRY }}/server:${{ steps.pkg.outputs.version }}
