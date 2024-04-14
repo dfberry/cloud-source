@@ -10,7 +10,7 @@ on:
       - '.github/workflows/server.yml'
   pull_request:
     branches: 
-      - 'main'
+      - '*'
     paths:
       - 'packages/server/**'
       - '.github/workflows/server.yml'
@@ -32,6 +32,11 @@ jobs:
         with:
           node-version: ${{ matrix.node-version }}
 
+      - name: Install JQ and get version from packages.json into env variable
+        run: |
+          sudo apt-get install jq
+          echo "CLIENT_VERSION=$(jq -r '.version' packages/client/package.json)" >> $GITHUB_ENV
+
       - name: Install, build, and test
         run: |
           cd packages/server
@@ -39,19 +44,24 @@ jobs:
           npm run build
           npm test
 
-      - name: Install JQ and get version from packages.json into env variable
-        run: |
-          sudo apt-get install jq
-          echo "server_VERSION=$(jq -r '.version' packages/server/package.json)" >> $GITHUB_ENV
-
-      - name: Docker Login to ACR
-        uses: docker/login-action@v1
+      - name: Package server and save as GitHub artifact
+        uses: actions/upload-artifact@v2
         with:
-          registry: ${{ secrets.ACR_REGISTRY }}
+          name: server-${{ env.CLIENT_VERSION }}-${{ github.sha }}
+          path: packages/server
+
+      - name: 'Login via Azure CLI'
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: 'Build and push image'
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ secrets.REGISTRY_LOGIN_SERVER }}
           username: ${{ secrets.ACR_USERNAME }}
           password: ${{ secrets.ACR_PASSWORD }}
-      
-      - name: Build and Push Docker image
-        run: |
-          docker build -t ${{ secrets.ACR_REGISTRY }}/server:${{ env.server_VERSION }}-${{ github.sha }} .
-          docker push ${{ secrets.ACR_REGISTRY }}/server:${{ env.server_VERSION }}-${{ github.sha }}
+      - run: |
+            cd packages/server
+            docker build . -t ${{ secrets.REGISTRY_LOGIN_SERVER }}/server:${{ env.CLIENT_VERSION }}-${{ github.sha }}
+            docker push ${{ secrets.REGISTRY_LOGIN_SERVER }}/server:${{ env.CLIENT_VERSION }}-${{ github.sha }}
