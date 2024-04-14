@@ -10,7 +10,7 @@ on:
       - '.github/workflows/client.yml'
   pull_request:
     branches: 
-      - 'main'
+      - '*'
     paths:
       - 'packages/client/**'
       - '.github/workflows/client.yml'
