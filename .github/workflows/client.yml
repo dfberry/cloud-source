@@ -41,15 +41,16 @@ jobs:
           npm run build
           npm test
 
+      - name: Package client and save as GitHub artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: client-${{ env.CLIENT_VERSION }}-${{ github.sha }}
+          path: packages/client/dist
+
       - name: Install JQ and get version from packages.json into env variable
         run: |
           sudo apt-get install jq
           echo "CLIENT_VERSION=$(jq -r '.version' packages/client/package.json)" >> $GITHUB_ENV
-
-      # - name: Login to ACR
-      #   run: |
-      #     az login -u ${{ secrets.ACR_USERNAME }} -p ${{ secrets.ACR_PASSWORD }} 
-      #     az acr login --name ${{ secrets.ACR_NAME }}
 
       - name: 'Login via Azure CLI'
         uses: azure/login@v1
@@ -63,29 +64,6 @@ jobs:
           username: ${{ secrets.ACR_USERNAME }}
           password: ${{ secrets.ACR_PASSWORD }}
       - run: |
-          cd packages/client
-          docker build . -t ${{ secrets.REGISTRY_LOGIN_SERVER }}/client:${{ github.sha }}
-          docker push ${{ secrets.REGISTRY_LOGIN_SERVER }}/client:${{ github.sha }}
-
-      # - name: 'Deploy to Azure Container Instances'
-      #   uses: 'azure/aci-deploy@v1'
-      #   with:
-      #     resource-group: ${{ secrets.RESOURCE_GROUP }}
-      #     dns-name-label: ${{ secrets.RESOURCE_GROUP }}${{ github.run_number }}
-      #     image: ${{ secrets.REGISTRY_LOGIN_SERVER }}/sampleapp:${{ github.sha }}
-      #     registry-login-server: ${{ secrets.REGISTRY_LOGIN_SERVER }}
-      #     registry-username: ${{ secrets.REGISTRY_USERNAME }}
-      #     registry-password: ${{ secrets.REGISTRY_PASSWORD }}
-      #     name: aci-sampleapp
-      #     location: 'west us'
-      # - name: Docker Login to ACR
-      #   uses: docker/login-action@v3
-      #   with:
-      #     registry: ${{ vars.ACR_REGISTRY_NAME }}.azurecr.io
-      #     username: ${{ secrets.ACR_USERNAME }}
-      #     password: ${{ secrets.ACR_PASSWORD }}
-      
-      # - name: Build and Push Docker image
-      #   run: |
-      #     docker build -t ${{ secrets.ACR_REGISTRY }}/client:${{ env.CLIENT_VERSION }}-${{ github.sha }} .
-      #     docker push ${{ secrets.ACR_REGISTRY }}/client:${{ env.CLIENT_VERSION }}-${{ github.sha }}
+            cd packages/client
+            docker build . -t ${{ secrets.REGISTRY_LOGIN_SERVER }}/client:${{ env.CLIENT_VERSION }}-${{ github.sha }}
+            docker push ${{ secrets.REGISTRY_LOGIN_SERVER }}/client:${{ env.CLIENT_VERSION }}-${{ github.sha }}
