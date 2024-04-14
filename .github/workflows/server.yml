@@ -1,16 +1,15 @@
 name: Server
 
 on:
-  workflow_dispatch:
   push:
     branches: 
-      - '*'
+      - 'main'
     paths:
       - 'packages/server/**'
       - '.github/workflows/server.yml'
   pull_request:
     branches: 
-      - '*'
+      - 'main'
     paths:
       - 'packages/server/**'
       - '.github/workflows/server.yml'
